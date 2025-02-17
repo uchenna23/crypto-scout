@@ -1,0 +1,42 @@
+/* Enlarged Full-Screen Dashboard Card */
+.full-width-card {
+  width: 98%;
+  max-width: 1800px;          // ✅ Wider for large screens
+  height: 90vh;               // ✅ Taller for better price visualization
+  margin: 1rem auto;
+  padding: 20px 40px;
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Adjust Chart to Fill More Space */
+p-chart {
+  width: 100%;
+  height: 100%;
+  max-width: 1700px;
+  max-height: 85vh;            // ✅ Increased height
+}
+
+/* Reset Zoom Button */
+.reset-zoom-btn {
+  margin-top: 20px;
+  padding: 12px 24px;
+  background-color: #42a5f5;
+  color: white;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #1e88e5;
+  }
+}

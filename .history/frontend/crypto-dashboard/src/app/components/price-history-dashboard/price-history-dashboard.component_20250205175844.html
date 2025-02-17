@@ -1,0 +1,11 @@
+<div class="price-history-card">
+  <h2>📊 Price History Dashboard (BTC, ETH, ADA, SOL, XRP)</h2>
+
+  <div class="toggle-buttons">
+    <button (click)="onRangeChange('mtd')" [class.active]="selectedRange === 'mtd'">Month-to-Date (MTD)</button>
+    <button (click)="onRangeChange('ytd')" [class.active]="selectedRange === 'ytd'">Year-to-Date (YTD)</button>
+    <button (click)="resetToDefault()" [class.active]="selectedRange === 'default'">Reset to Default 🔄</button>
+  </div>
+
+  <p-chart type="line" [data]="chartData" [options]="chartOptions"></p-chart>
+</div>

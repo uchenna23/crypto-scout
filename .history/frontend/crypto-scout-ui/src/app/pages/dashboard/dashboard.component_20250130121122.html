@@ -1,0 +1,14 @@
+<div>
+    <h2>Crypto Dashboard</h2>
+  
+    <!-- 
+      Use the async pipe to subscribe to the priceUpdates$ observable in the template.
+      The async pipe automatically unsubscribes when the component is destroyed.
+    -->
+    <div *ngIf="priceUpdates$ | async as updates">
+      <div *ngFor="let key of getKeys(updates)">
+        <strong>{{ key }}:</strong> {{ updates[key] }}
+      </div>
+    </div>
+  </div>
+  

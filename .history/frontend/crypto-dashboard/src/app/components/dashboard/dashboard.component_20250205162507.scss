@@ -1,0 +1,38 @@
+/* Full-Screen Dashboard Container */
+.full-width-card {
+  width: 100dvh;
+  height: 100%;            // ✅ Fill the full height
+  margin: 0;               // Remove auto centering
+  padding: 20px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;  // Stack chart and button vertically
+  align-items: center;     // Center horizontally
+  justify-content: center; // Center vertically
+  box-sizing: border-box;
+}
+
+/* Make Chart Fill the Available Space */
+p-chart {
+  width: 100%;
+  height: 100%;            // ✅ Make the chart stretch fully
+  max-height: 85vh;        // Limit height to avoid overlapping footer
+}
+
+/* Reset Zoom Button Styling */
+.reset-zoom-btn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #42a5f5;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #1e88e5;
+  }
+}

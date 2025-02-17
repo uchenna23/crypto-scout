@@ -1,0 +1,75 @@
+/* Global Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Ensure HTML and Body take full height */
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;  // Prevent scrolling if content fits the screen
+  font-family: 'Arial', sans-serif;
+  background-color: #f4f4f4;
+}
+
+/* App Root Styling */
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;  // Ensures the app covers full viewport height
+}
+
+/* Navigation Bar */
+p-menubar {
+  background-color: #1e1e2f;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-bottom: 3px solid #f39c12;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Logo Section */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: bold;
+  font-size: 1.4rem;
+}
+
+.app-title {
+  color: #f39c12;
+}
+
+/* Menu Items */
+.menu-items button {
+  margin-right: 0.5rem;
+  color: #fff;
+}
+
+/* Dashboard Container */
+.dashboard-container {
+  flex: 1; // ✅ Makes the dashboard fill available vertical space
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin: 1rem;
+  overflow: auto;  // Allows scrolling inside the dashboard if needed
+}
+
+/* Footer */
+footer {
+  background-color: #1e1e2f;
+  color: #fff;
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.85rem;
+}

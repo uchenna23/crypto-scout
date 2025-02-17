@@ -1,0 +1,17 @@
+.dashboard-container {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  
+  .price-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+  }
+  
+  .price-table th, .price-table td {
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+  }
+  

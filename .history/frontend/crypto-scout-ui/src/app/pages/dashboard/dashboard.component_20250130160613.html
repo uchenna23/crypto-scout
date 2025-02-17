@@ -1,0 +1,21 @@
+<div class="dashboard-container">
+  <h2>Live Crypto Dashboard</h2>
+
+  <table class="price-table">
+    <thead>
+      <tr>
+        <th>Product ID</th>
+        <th>Price (USD)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let productId of getProductIds()">
+        <td>{{ productId }}</td>
+        <td>{{ prices[productId] | number:'1.2-2' }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Include our chart component below -->
+  <app-crypto-chart></app-crypto-chart>
+</div>

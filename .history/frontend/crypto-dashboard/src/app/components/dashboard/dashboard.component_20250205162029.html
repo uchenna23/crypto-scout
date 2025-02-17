@@ -1,0 +1,5 @@
+<div class="full-width-card"> <!-- ✅ Use the full-width-card class -->
+  <h2>📈 Crypto Dashboard</h2>
+  <p-chart #cryptoChart type="line" [data]="chartData" [options]="chartOptions"></p-chart>
+  <button (click)="resetZoom()" class="reset-zoom-btn">Reset Zoom 🔄</button>
+</div>

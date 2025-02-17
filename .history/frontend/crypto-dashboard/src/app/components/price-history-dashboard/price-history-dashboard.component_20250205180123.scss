@@ -1,0 +1,70 @@
+.price-history-card {
+  width: 100vh;
+  height: 50vh;
+  margin: 1rem auto;
+  padding: 20px 40px;
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+p-chart {
+  width: 100%;
+  height: 100%;
+  max-width: 1700px;
+  max-height: 85vh;
+}
+
+.toggle-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+
+  button {
+    padding: 10px 20px;
+    background-color: #e0e0e0;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+
+    &.active {
+      background-color: #42a5f5;
+      color: white;
+    }
+
+    &:hover {
+      background-color: #64b5f6;
+    }
+  }
+}
+.reset-button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+
+  button {
+    padding: 10px 20px;
+    background-color: #42a5f5;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+
+    &:hover {
+      background-color: #1e88e5;
+    }
+
+    &.active {
+      background-color: #1565c0;
+    }
+  }
+}
+
+

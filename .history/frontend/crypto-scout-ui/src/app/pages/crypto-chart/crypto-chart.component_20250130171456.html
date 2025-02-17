@@ -1,0 +1,11 @@
+<apx-chart
+  *ngIf="chartOptions"
+  [series]="chartOptions.series ?? []"
+  [chart]="chartOptions.chart ?? { type: 'line', height: 300 }"
+  [xaxis]="chartOptions.xaxis ?? { type: 'datetime' }"
+  [yaxis]="chartOptions.yaxis ?? { title: { text: 'Price (USD)' } }"
+  [title]="chartOptions.title ?? { text: 'BTC-USD Live Chart', align: 'center' }"
+  [dataLabels]="chartOptions.dataLabels ?? { enabled: false }"
+  [stroke]="chartOptions.stroke ?? { curve: 'smooth' }"
+  [tooltip]="chartOptions.tooltip ?? { x: { format: 'HH:mm:ss' } }"
+></apx-chart>

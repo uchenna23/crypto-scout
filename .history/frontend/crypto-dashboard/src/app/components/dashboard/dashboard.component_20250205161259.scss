@@ -1,0 +1,24 @@
+.full-width-card {
+  width: 100%;
+  max-width: 1200px;  // ✅ Optional: Limit the max width for larger screens
+  margin: 0 auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.reset-zoom-btn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #42a5f5;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #1e88e5;
+  }
+}

@@ -1,0 +1,12 @@
+<div class="full-width-card">
+  <h2>📈 Crypto Dashboard</h2>
+
+  <!-- View Toggle Buttons -->
+  <div class="toggle-buttons">
+    <button [class.active]="currentView === 'DTD'" (click)="filterDataByView('DTD')">Day-to-Date (DTD)</button>
+    <button [class.active]="currentView === 'MTD'" (click)="filterDataByView('MTD')">Month-to-Date (MTD)</button>
+    <button [class.active]="currentView === 'YTD'" (click)="filterDataByView('YTD')">Year-to-Date (YTD)</button>
+  </div>
+
+  <p-chart #cryptoChart type="line" [data]="chartData" [options]="chartOptions"></p-chart>
+</div>
