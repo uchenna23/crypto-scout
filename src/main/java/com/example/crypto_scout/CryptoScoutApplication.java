@@ -10,16 +10,12 @@ import java.util.Collections;
 public class CryptoScoutApplication {
 
     public static void main(String[] args) {
-        // Retrieve the PORT environment variable
-        String port = System.getenv("PORT");
-        if (port == null) {
-            port = "8080"; // default if PORT is not set
-        }
-        System.out.println("Starting application on port: " + port);
+        String portEnv = System.getenv("PORT");
+        System.out.println("Environment variable PORT: " + portEnv);
 
-        // Set the server.port property to the value from the environment variable
+        // Force the server port using a system property
         SpringApplication app = new SpringApplication(CryptoScoutApplication.class);
-        app.setDefaultProperties(Collections.singletonMap("server.port", port));
+        app.setDefaultProperties(Collections.singletonMap("server.port", "80"));
         app.run(args);
     }
 }
