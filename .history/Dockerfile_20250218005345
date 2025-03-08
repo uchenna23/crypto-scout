@@ -1,0 +1,24 @@
+# Use a Maven image to build the application
+FROM maven:3.8.7-openjdk-17 AS builder
+WORKDIR /app
+
+# Copy only the pom.xml and download dependencies for caching
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# Copy the source code and build the application
+COPY src ./src
+RUN mvn package -DskipTests -B
+
+# Use a lightweight OpenJDK image to run the application
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+
+# Copy the built JAR from the builder stage
+COPY --from=builder /app/target/*.jar app.jar
+
+# Expose port 80 (the port we want your app to bind to)
+EXPOSE 80
+
+# Run the application, forcing the server.port to 80
+ENTRYPOINT ["java", "-Dserver.port=80", "-jar", "app.jar"]

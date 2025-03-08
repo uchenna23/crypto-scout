@@ -1,0 +1,31 @@
+# Stage 1: Build the Angular app (static build)
+FROM node:18 AS builder
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy the rest of the source code
+COPY . .
+
+# Build the Angular app in production mode (forcing a static build)
+RUN SSR=false npm run build --prod
+
+# Stage 2: Serve the built app with Nginx
+FROM nginx:alpine
+# Remove default Nginx content
+RUN rm -rf /usr/share/nginx/html/*
+# Copy the built files from the builder stage.
+# Adjust the path below if your output directory is different.
+COPY --from=builder /app/dist/crypto-dashboard/browser /usr/share/nginx/html
+
+# Replace the placeholder in index.html with your actual backend URL.
+# Replace "https://crypto-scout-backend.azurewebsites.net/api" with your backend URL.
+RUN sed -i 's|{{API_URL}}|https://crypto-scout-backend.azurewebsites.net/api|g' /usr/share/nginx/html/index.html
+
+# Expose port 80
+EXPOSE 80
+
+# Start Nginx in the foreground
+CMD ["nginx", "-g", "daemon off;"]

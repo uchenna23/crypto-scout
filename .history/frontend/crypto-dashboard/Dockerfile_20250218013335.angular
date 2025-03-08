@@ -1,0 +1,29 @@
+# Stage 1: Build the Angular application (both browser and server bundles)
+FROM node:18 AS builder
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package.json package-lock.json ./
+RUN npm install
+
+# Copy the entire project including tsconfig.server.json
+COPY . .
+
+# Optional: Explicitly copy tsconfig.server.json if needed
+# COPY tsconfig.server.json ./
+
+# Build the Angular app with SSR
+RUN npm run build:ssr
+
+# Stage 2: Run the Angular Universal server
+FROM node:18
+WORKDIR /app
+
+# Copy the built artifacts from the builder stage
+COPY --from=builder /app/dist/crypto-dashboard .
+
+# Expose the port that your SSR server will listen on.
+EXPOSE 4000
+
+# Start the server
+CMD ["node", "server/server.mjs"]
