@@ -1,0 +1,26 @@
+# Stage 1: Build the Angular application (static build)
+FROM node:18 AS builder
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy the rest of the source code
+COPY . .
+
+# Build the Angular app in production mode as a static build.
+# Force SSR to false so that only the browser build is produced.
+RUN SSR=false npm run build --prod
+
+# Stage 2: Serve the built app with Nginx
+FROM nginx:alpine
+# Remove default Nginx static assets
+RUN rm -rf /usr/share/nginx/html/*
+# Copy the built files from the builder stage.
+# Adjust this path if your output folder is different in angular.json.
+COPY --from=builder /app/dist/crypto-dashboard /usr/share/nginx/html
+
+# Expose port 80 and run Nginx in the foreground
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

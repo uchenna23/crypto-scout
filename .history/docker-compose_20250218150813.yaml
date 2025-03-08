@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  backend:
+    image: uchenna23/backend:latest
+    container_name: backend
+    ports:
+      - "8081:80"  # If your backend listens on port 80 internally
+    environment:
+      - ALLOWED_ORIGINS=*  # For testing, allow all origins
+    networks:
+      - app-network
+
+  frontend:
+    image: uchenna23/angular-frontend:latest
+    container_name: frontend
+    ports:
+      - "8080:80"
+    environment:
+      - API_URL=http://backend/api
+      - WS_URL=ws://backend/ws
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

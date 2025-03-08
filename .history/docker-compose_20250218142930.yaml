@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  backend:
+    image: uchenna23/backend:latest
+    container_name: backend
+    ports:
+      - "8081:80"  # Exposes port 80 of the backend container on host port 8081
+    networks:
+      - app-network
+
+  frontend:
+    image: uchenna23/angular-frontend:latest
+    container_name: frontend
+    ports:
+      - "8080:80"  # Exposes port 80 of the frontend container on host port 8080
+    environment:
+      - API_URL=http://backend/api
+      - WS_URL=ws://backend/ws   # WebSocket URL: adjust the path if your backend uses a different endpoint
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

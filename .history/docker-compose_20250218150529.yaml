@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  backend:
+    image: uchenna23/backend:latest
+    container_name: backend
+    ports:
+      - "8081:80"  # Exposes container port 80 on host port 8081
+    # For testing, pass an environment variable that your backend can use to set allowed origins.
+    # You would then modify your backend code to use this variable if present.
+    environment:
+      - ALLOWED_ORIGINS=*
+    networks:
+      - app-network
+
+  frontend:
+    image: uchenna23/angular-frontend:latest
+    container_name: frontend
+    ports:
+      - "8080:80"  # Exposes container port 80 on host port 8080
+    environment:
+      - API_URL=http://backend/api
+      - WS_URL=ws://backend/ws  # This tells your frontend to connect to the backend via service name "backend"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

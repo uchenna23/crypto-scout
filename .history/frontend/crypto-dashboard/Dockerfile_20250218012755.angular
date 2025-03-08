@@ -1,0 +1,27 @@
+# Stage 1: Build the Angular application (both browser and server bundles)
+FROM node:18 AS builder
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package.json package-lock.json ./
+RUN npm install
+
+# Copy the rest of your source code
+COPY . .
+
+# Build both browser and server bundles
+# Ensure your package.json has a script like "build:ssr" that does both builds.
+RUN npm run build:ssr
+
+# Stage 2: Run the Angular Universal server
+FROM node:18
+WORKDIR /app
+
+# Copy the built bundles from the builder stage
+COPY --from=builder /app/dist/crypto-dashboard .
+
+# Expose the port your Angular Universal server listens on (adjust if needed)
+EXPOSE 4000
+
+# Start the server (adjust the path if your server bundle entry point is different)
+CMD ["node", "server/main.js"]
