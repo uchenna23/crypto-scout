@@ -62,7 +62,7 @@ public class CryptoWebSocketHandler extends TextWebSocketHandler {
     }
 
     @PostConstruct
-    public void init() throws CryptoWebSocketInitException {
+    private void init() throws CryptoWebSocketInitException {
         try {
             coinbaseWebSocket = new WebSocketClient(new URI(coinbaseWebSocketUri)) {
                 @Override
