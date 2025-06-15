@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
   <meta charset="utf-8">
   <title>CryptoScout</title>
   <base href="/">
@@ -10,8 +12,11 @@
   </script>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <script>
-    window.apiUrl = "{{API_URL}}";
-  </script>  
+    window.apiUrl = "http://localhost:8081";
+  </script>
+  <script>
+    window.WS_URL = "ws://localhost:8081/ws";
+  </script>
 </head>
 <body>
   <app-root></app-root>

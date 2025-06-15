@@ -14,7 +14,7 @@ import { ButtonModule } from 'primeng/button';
 export class MarketAnalysisChatComponent {
   messages: { text: string, sender: 'user' | 'bot' }[] = [];
   userInput: string = '';
-  private apiUrl = 'http://localhost:8080/api/openai/chat';
+  private apiUrl = 'http://localhost:8081/api/openai/chat';
 
   constructor(private http: HttpClient) {}
 
