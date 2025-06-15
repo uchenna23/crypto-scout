@@ -1,0 +1,23 @@
+<div class="chat-wrapper">
+  <header class="chat-header">
+    <h1 class="chat-title">Crypto Scout AI Market Analysis</h1>
+    <h3 class="chat-subtitle">Ask any questions about a specific cryptocurrency!</h3>
+  </header>
+
+  <div class="chat-container">
+    <div class="chat-box">
+      <div *ngFor="let message of messages" class="message" [ngClass]="{'user': message.sender === 'user', 'bot': message.sender === 'bot'}">
+        <p>{{ message.text }}</p>
+      </div>
+    </div>
+    
+    <div class="input-container">
+      <input type="text" [(ngModel)]="userInput" placeholder="Type your message..." (keyup.enter)="sendMessage()">
+      <button pButton label="Send" icon="pi pi-send" (click)="sendMessage()"></button>
+    </div>
+  </div>
+
+  <footer class="chat-footer">
+    <p>Powered by OpenAI©</p>
+  </footer>
+</div>

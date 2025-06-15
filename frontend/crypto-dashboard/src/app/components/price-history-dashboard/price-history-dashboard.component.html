@@ -1,0 +1,17 @@
+<div class="price-history-card">
+  <h2>📈 Price History Dashboard</h2>
+
+  <!-- 🚀 Toggle Buttons for MTD, YTD -->
+  <div class="toggle-buttons">
+    <button (click)="onRangeChange('mtd')" [class.active]="selectedRange === 'mtd'">Month-to-Date (MTD)</button>
+    <button (click)="onRangeChange('ytd')" [class.active]="selectedRange === 'ytd'">Year-to-Date (YTD)</button>
+  </div>
+  <h5>Toggle Coins</h5>
+  <!-- 📊 Price History Chart -->
+  <p-chart #priceHistoryChart type="line" [data]="chartData" [options]="chartOptions"></p-chart>
+
+  <!-- 🔄 Reset Button Below the Chart -->
+  <div class="reset-button-container">
+    <button (click)="resetToDefault()" [class.active]="selectedRange === 'default'">Reset to Default 🔄</button>
+  </div>
+</div>
