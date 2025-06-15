@@ -11,7 +11,7 @@ import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.framing.Framedata;
 import org.java_websocket.handshake.ServerHandshake;
 
-import jakarta.annotation.PostConstruct;
+import javax.annotation.PostConstruct;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.*;

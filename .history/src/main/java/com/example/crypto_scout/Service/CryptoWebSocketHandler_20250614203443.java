@@ -8,10 +8,9 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import org.java_websocket.client.WebSocketClient;
-import org.java_websocket.framing.Framedata;
 import org.java_websocket.handshake.ServerHandshake;
+import org.java_websocket.framing.Framedata;
 
-import jakarta.annotation.PostConstruct;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.*;
@@ -31,7 +30,7 @@ public class CryptoWebSocketHandler extends TextWebSocketHandler {
     @Value("${coinbase.api.key}")
     private String apiKey;
 
-    @Value("${coinbase.websocket.uri:wss://advanced-trade-ws.coinbase.com}")
+    @Value("${wss://advanced-trade-ws.coinbase.com}")
     private String coinbaseWebSocketUri;
 
     private final SimpMessagingTemplate messagingTemplate;
@@ -48,21 +47,26 @@ public class CryptoWebSocketHandler extends TextWebSocketHandler {
     public CryptoWebSocketHandler(SimpMessagingTemplate messagingTemplate, StringRedisTemplate redisTemplate) {
         this.messagingTemplate = messagingTemplate;
         this.redisTemplate = redisTemplate;
-    }
 
-    /**
-     * Initialize WebSocket connection and schedulers after properties are set.
-     */
-    @PostConstruct
-    private void init() {
         connectToCoinbase();
         startBatchProcessor();
         startKeepAlive();
         startPongMonitor();
     }
 
+    /**
+     * Allows external configuration of the connection lost timeout.
+     */
+    public void setConnectionLostTimeout(int timeoutSeconds) {
+        this.connectionLostTimeoutSeconds = timeoutSeconds;
+    }
+
+    /**
+     * Connect to Coinbase's Advanced Trade WebSocket.
+     */
     private void connectToCoinbase() {
         try {
+            // Use the configurable URI instead of the hardcoded one
             coinbaseWebSocket = new WebSocketClient(new URI(coinbaseWebSocketUri)) {
 
                 @Override
@@ -101,12 +105,11 @@ public class CryptoWebSocketHandler extends TextWebSocketHandler {
             reconnectToCoinbase();
         }
     }
-
     private void sendSubscriptionRequest(WebSocketClient client) {
         Map<String, Object> subscribeMessage = Map.of(
-            "type", "subscribe",
-            "channel", "ticker",
-            "product_ids", List.of("BTC-USD", "ETH-USD", "ADA-USD", "SOL-USD", "XRP-USD")
+                "type", "subscribe",
+                "channel", "ticker",
+                "product_ids", List.of("BTC-USD", "ETH-USD", "ADA-USD", "SOL-USD", "XRP-USD")
         );
         try {
             String jsonMessage = objectMapper.writeValueAsString(subscribeMessage);
@@ -117,13 +120,19 @@ public class CryptoWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
+    /**
+     * Processes incoming WebSocket messages.
+     */
     private void processIncomingMessage(String message) {
         try {
             Map<String, Object> data = objectMapper.readValue(message, new TypeReference<>() {});
             Object eventsObj = data.get("events");
-            if (!(eventsObj instanceof List<?>)) return;
+            if (!(eventsObj instanceof List<?>)) {
+                return;
+            }
 
-            for (Object obj : (List<?>) eventsObj) {
+            List<?> eventsList = (List<?>) eventsObj;
+            for (Object obj : eventsList) {
                 processEventObject(obj);
             }
         } catch (Exception e) {
@@ -131,40 +140,60 @@ public class CryptoWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
+    /**
+     * Processes a single event object from the WebSocket message.
+     */
     @SuppressWarnings("unchecked")
     private void processEventObject(Object obj) {
-        if (!(obj instanceof Map<?, ?>)) return;
+        if (!(obj instanceof Map)) return;
         Map<String, Object> event = (Map<String, Object>) obj;
+
         Object tickersObj = event.get("tickers");
         if (!(tickersObj instanceof List<?>)) return;
+        List<?> tickersList = (List<?>) tickersObj;
 
-        for (Object tObj : (List<?>) tickersObj) {
+        for (Object tObj : tickersList) {
             processTickerObject(tObj);
         }
     }
 
+    /**
+     * Processes a single ticker object from the event.
+     */
     @SuppressWarnings("unchecked")
     private void processTickerObject(Object tObj) {
-        if (!(tObj instanceof Map<?, ?>)) return;
+        if (!(tObj instanceof Map)) return;
         Map<String, Object> ticker = (Map<String, Object>) tObj;
-        if (!ticker.containsKey("product_id") || !ticker.containsKey("price")) return;
+
+        if (!ticker.containsKey("product_id") || !ticker.containsKey("price")) {
+            return;
+        }
 
         String productId = (String) ticker.get("product_id");
         double newPrice = Double.parseDouble((String) ticker.get("price"));
-        if (!trackPriceChange(productId, newPrice) || !rateLimitPassed(productId)) return;
+
+        if (!trackPriceChange(productId, newPrice)) {
+            return;
+        }
+
+        if (!rateLimitPassed(productId)) {
+            return;
+        }
 
         cachePriceUpdate(productId, newPrice);
-        String formattedMessage = String.format("{ \"%s\": %s }", productId, newPrice);
+        String formattedMessage = "{ \"" + productId + "\": " + newPrice + " }";
         messageBuffer.add(formattedMessage);
         logger.info("📥 Added to messageBuffer: {}", formattedMessage);
     }
 
     private boolean trackPriceChange(String productId, double newPrice) {
         double lastPrice = lastPrices.getOrDefault(productId, -1.0);
+
         if (lastPrice < 0.0) {
             lastPrices.put(productId, newPrice);
             return true;
         }
+
         double pctChange = Math.abs((newPrice - lastPrice) / lastPrice) * 100.0;
         if (pctChange > PRICE_CHANGE_THRESHOLD) {
             lastPrices.put(productId, newPrice);
@@ -176,6 +205,7 @@ public class CryptoWebSocketHandler extends TextWebSocketHandler {
     private boolean rateLimitPassed(String productId) {
         long now = System.currentTimeMillis();
         long lastTime = lastUpdateTimestamps.getOrDefault(productId, 0L);
+
         if ((now - lastTime) > MIN_UPDATE_INTERVAL_MS) {
             lastUpdateTimestamps.put(productId, now);
             return true;
@@ -189,38 +219,43 @@ public class CryptoWebSocketHandler extends TextWebSocketHandler {
 
     private void startBatchProcessor() {
         scheduler.scheduleAtFixedRate(() -> {
-            if (messageBuffer.isEmpty()) return;
-            try {
-                Map<String, Double> batchedUpdates = new HashMap<>();
-                String updateStr;
-                while ((updateStr = messageBuffer.poll()) != null) {
-                    Map<String, Double> update = objectMapper.readValue(updateStr, new TypeReference<>() {});
-                    batchedUpdates.putAll(update);
+            if (!messageBuffer.isEmpty()) {
+                try {
+                    Map<String, Double> batchedUpdates = new HashMap<>();
+                    while (!messageBuffer.isEmpty()) {
+                        String updateStr = messageBuffer.poll();
+                        if (updateStr == null) break;
+
+                        Map<String, Double> update = objectMapper.readValue(updateStr, new TypeReference<>() {});
+                        batchedUpdates.putAll(update);
+                    }
+
+                    if (!batchedUpdates.isEmpty()) {
+                        String json = objectMapper.writeValueAsString(batchedUpdates);
+                        messagingTemplate.convertAndSend("/topic/crypto", json);
+                        logger.info("📩 Sent to WebSocket Clients: {}", json);
+                    }
+                } catch (Exception e) {
+                    logger.error("❌ Error sending update: {}", e.getMessage());
                 }
-                if (!batchedUpdates.isEmpty()) {
-                    String json = objectMapper.writeValueAsString(batchedUpdates);
-                    messagingTemplate.convertAndSend("/topic/crypto", json);
-                    logger.info("📩 Sent to WebSocket Clients: {}", json);
-                }
-            } catch (Exception e) {
-                logger.error("❌ Error sending update: {}", e.getMessage());
             }
         }, 5, 10, TimeUnit.SECONDS);
     }
 
     private void startKeepAlive() {
         scheduler.scheduleAtFixedRate(() -> {
-            if (coinbaseWebSocket != null && coinbaseWebSocket.isOpen()) {
-                try {
+            try {
+                if (coinbaseWebSocket != null && coinbaseWebSocket.isOpen()) {
                     coinbaseWebSocket.send("{\"type\":\"ping\"}");
                     logger.info("🔄 Sent keep-alive ping");
-                } catch (Exception e) {
-                    logger.error("❌ Keep-alive ping failed: {}", e.getMessage());
                 }
+            } catch (Exception e) {
+                logger.error("❌ Keep-alive ping failed: {}", e.getMessage());
             }
         }, 5, 30, TimeUnit.SECONDS);
     }
 
+    // Added: Monitor the pong responses and trigger reconnect if timeout is exceeded.
     private void startPongMonitor() {
         scheduler.scheduleAtFixedRate(() -> {
             if (coinbaseWebSocket != null && coinbaseWebSocket.isOpen()) {
