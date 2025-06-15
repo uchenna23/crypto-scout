@@ -1,15 +1,12 @@
 package com.example.crypto_scout;
 
 import com.example.crypto_scout.Service.OpenAIService;
-import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
@@ -21,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({"unchecked", "rawtypes"})
 class OpenAIServiceTest {
 
     private OpenAIService service;
@@ -31,25 +28,28 @@ class OpenAIServiceTest {
     void setUp() throws Exception {
         service = new OpenAIService();
         restTemplateMock = mock(RestTemplate.class);
+        // inject RestTemplate
         var restField = OpenAIService.class.getDeclaredField("restTemplate");
         restField.setAccessible(true);
         restField.set(service, restTemplateMock);
+        // inject API key
         var apiField = OpenAIService.class.getDeclaredField("openAiApiKey");
         apiField.setAccessible(true);
         apiField.set(service, "test-key");
     }
 
     // --- analyzeMarketTrends tests ---
-
     @Test
     void analyzeMarketTrends_success() {
         Map<String,Object> choice = Map.of("message", Map.of("content", "analysis-result"));
-        ResponseEntity<Map> resp = new ResponseEntity<>(Map.of("choices", List.of(choice)), HttpStatus.OK);
-        when(restTemplateMock.exchange(eq(OpenAIService.OPENAI_API_URL), eq(HttpMethod.POST), any(HttpEntity.class), eq(Map.class)))
-            .thenReturn(resp);
-        assertEquals("analysis-result", service.analyzeMarketTrends("data"));
+        ResponseEntity<Map<String, Object>> resp = new ResponseEntity<>(Map.of("choices", List.of(choice)), HttpStatus.OK);
+        when(restTemplateMock.exchange(eq(OpenAIService.OPENAI_API_URL), eq(HttpMethod.POST), any(HttpEntity.class), eq((Class<Map<String, Object>>) (Class<?>) Map.class)))
+                    .thenReturn(resp);
+        String result = service.analyzeMarketTrends("data");
+        assertEquals("analysis-result", result);
     }
 
+    
     @Test
     void analyzeMarketTrends_noChoices() {
         ResponseEntity<Map> resp = new ResponseEntity<>(Map.of("choices", List.of()), HttpStatus.OK);
@@ -58,23 +58,19 @@ class OpenAIServiceTest {
     }
 
     @Test
-    void analyzeMarketTrends_rateLimit() {
-        // Simulate rate limiter exception via static factory
-        RateLimiter limiter = (RateLimiter) ReflectionTestUtils.getField(service, "rateLimiter");
-        RequestNotPermitted ex = RequestNotPermitted.createRequestNotPermitted(limiter);
-        when(restTemplateMock.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), eq(Map.class)))
-            .thenThrow(ex);
-        assertEquals("Rate limit exceeded in service. Please try again later.",
-            service.analyzeMarketTrends("data"));
-    }
+void analyzeMarketTrends_rateLimit() {
+    when(restTemplateMock.exchange(anyString(), eq(HttpMethod.POST), any(), eq(Map.class)))
+        .thenThrow(new Exception("Rate limit exceeded"));
+    assertEquals("Rate limit exceeded in service. Please try again later.",
+        service.analyzeMarketTrends("data"));
+}
 
     @Test
     void analyzeMarketTrends_http429() {
         HttpClientErrorException ex = HttpClientErrorException.create(
             HttpStatus.TOO_MANY_REQUESTS, "Too Many", null,
             "quota body".getBytes(), StandardCharsets.UTF_8);
-        when(restTemplateMock.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), eq(Map.class)))
-            .thenThrow(ex);
+        when(restTemplateMock.exchange(anyString(), eq(HttpMethod.POST), any(), eq(Map.class))).thenThrow(ex);
         assertEquals("OpenAI API quota exceeded. Please check your plan and billing details.",
             service.analyzeMarketTrends("data"));
     }
@@ -84,20 +80,18 @@ class OpenAIServiceTest {
         HttpClientErrorException ex = HttpClientErrorException.create(
             HttpStatus.BAD_REQUEST, "Bad", null,
             "error-body".getBytes(), StandardCharsets.UTF_8);
-        when(restTemplateMock.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), eq(Map.class)))
-            .thenThrow(ex);
+        when(restTemplateMock.exchange(anyString(), eq(HttpMethod.POST), any(), eq(Map.class))).thenThrow(ex);
         assertEquals("API error: error-body", service.analyzeMarketTrends("data"));
     }
 
     @Test
     void analyzeMarketTrends_exception() {
-        when(restTemplateMock.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), eq(Map.class)))
+        when(restTemplateMock.exchange(anyString(), eq(HttpMethod.POST), any(), eq(Map.class)))
             .thenThrow(new RuntimeException("fail-trend"));
         assertEquals("Error: fail-trend", service.analyzeMarketTrends("data"));
     }
 
     // --- getCurrentCoinPrice tests ---
-
     @Test
     void getCurrentCoinPrice_success() {
         Map<String,Object> coinData = Map.of("usd", 123);
@@ -122,7 +116,6 @@ class OpenAIServiceTest {
     }
 
     // --- getCoinDetails tests ---
-
     @Test
     void getCoinDetails_success() {
         Map<String,Object> priceMap = Map.of("usd", 10);
@@ -151,9 +144,9 @@ class OpenAIServiceTest {
     }
 
     // --- analyzeCoin tests ---
-
     @Test
     void analyzeCoin_success() throws Exception {
+        // spy to override getCoinDetails
         var spy = spy(service);
         doReturn("details").when(spy).getCoinDetails("xyz");
         Map<String,Object> choice = Map.of("message", Map.of("content", "analysis-coin"));
@@ -166,10 +159,8 @@ class OpenAIServiceTest {
     void analyzeCoin_rateLimit() throws Exception {
         var spy = spy(service);
         doReturn("details").when(spy).getCoinDetails(anyString());
-        RateLimiter limiter = (RateLimiter) ReflectionTestUtils.getField(spy, "rateLimiter");
-        RequestNotPermitted ex = RequestNotPermitted.createRequestNotPermitted(limiter);
-        when(restTemplateMock.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), eq(Map.class)))
-            .thenThrow(ex);
+        when(restTemplateMock.exchange(anyString(), eq(HttpMethod.POST), any(), eq(Map.class)))
+            .thenThrow(new Exception("Rate limit exceeded"));
         assertEquals("Rate limit exceeded in service. Please try again later.", spy.analyzeCoin("xyz"));
     }
 
@@ -180,7 +171,7 @@ class OpenAIServiceTest {
         HttpClientErrorException ex = HttpClientErrorException.create(
             HttpStatus.TOO_MANY_REQUESTS, "Too Many", null,
             "quota2".getBytes(), StandardCharsets.UTF_8);
-        when(restTemplateMock.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), eq(Map.class))).thenThrow(ex);
+        when(restTemplateMock.exchange(anyString(), eq(HttpMethod.POST), any(), eq(Map.class))).thenThrow(ex);
         assertEquals("OpenAI API quota exceeded. Please check your plan and billing details.", spy.analyzeCoin("xyz"));
     }
 
@@ -191,7 +182,7 @@ class OpenAIServiceTest {
         HttpClientErrorException ex = HttpClientErrorException.create(
             HttpStatus.BAD_REQUEST, "Bad", null,
             "err2".getBytes(), StandardCharsets.UTF_8);
-        when(restTemplateMock.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), eq(Map.class))).thenThrow(ex);
+        when(restTemplateMock.exchange(anyString(), eq(HttpMethod.POST), any(), eq(Map.class))).thenThrow(ex);
         assertEquals("API error: err2", spy.analyzeCoin("xyz"));
     }
 
@@ -199,7 +190,7 @@ class OpenAIServiceTest {
     void analyzeCoin_exception() throws Exception {
         var spy = spy(service);
         doReturn("details").when(spy).getCoinDetails("xyz");
-        when(restTemplateMock.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), eq(Map.class)))
+        when(restTemplateMock.exchange(anyString(), eq(HttpMethod.POST), any(), eq(Map.class)))
             .thenThrow(new RuntimeException("fail-coin"));
         assertEquals("Error: fail-coin", spy.analyzeCoin("xyz"));
     }
