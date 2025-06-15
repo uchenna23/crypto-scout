@@ -121,10 +121,7 @@ class CryptoWebSocketHandlerTest {
             @Override public void onError(Exception ex) {
                 //No-op
             }
-            @Override public void send(String text) {
-                sent.add(text);
-            
-            }
+            @Override public void send(String text) { sent.add(text); }
         };
         Method m = CryptoWebSocketHandler.class.getDeclaredMethod("sendSubscriptionRequest", WebSocketClient.class);
         m.setAccessible(true);

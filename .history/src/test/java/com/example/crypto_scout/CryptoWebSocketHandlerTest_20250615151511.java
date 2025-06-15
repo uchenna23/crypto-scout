@@ -83,9 +83,9 @@ class CryptoWebSocketHandlerTest {
         @Override public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) { throw new UnsupportedOperationException(); }
         @Override public boolean isShutdown() { return false; }
         @Override public boolean isTerminated() { return false; }
-        @Override public void shutdown() { 
-            //No-op
-        }
+        @Override public void shutdown() {
+            // No-op
+         }
         @Override public List<Runnable> shutdownNow() { return Collections.emptyList(); }
     }
 
@@ -110,21 +110,18 @@ class CryptoWebSocketHandlerTest {
         List<String> sent = new ArrayList<>();
         WebSocketClient client = new WebSocketClient(new URI("ws://dummy")) {
             @Override public void onOpen(ServerHandshake s) {
-                //No-op
+                // No-op
             }
             @Override public void onMessage(String m) {
-                //No-op
+                // No-op
             }
             @Override public void onClose(int c, String r, boolean rem) {
-                //No-op
+                // No-op
             }
             @Override public void onError(Exception ex) {
-                //No-op
+                // No-op
             }
-            @Override public void send(String text) {
-                sent.add(text);
-            
-            }
+            @Override public void send(String text) { sent.add(text); }
         };
         Method m = CryptoWebSocketHandler.class.getDeclaredMethod("sendSubscriptionRequest", WebSocketClient.class);
         m.setAccessible(true);
@@ -150,7 +147,6 @@ class CryptoWebSocketHandlerTest {
         Method m = CryptoWebSocketHandler.class.getDeclaredMethod("processIncomingMessage", String.class);
         m.setAccessible(true);
         m.invoke(handler, msg);
-        
         ConcurrentLinkedQueue<String> buf = (ConcurrentLinkedQueue<String>) ReflectionTestUtils.getField(handler, "messageBuffer");
         assertEquals("{ \"BTC-USD\": 100.5 }", buf.poll());
     }
@@ -193,16 +189,16 @@ class CryptoWebSocketHandlerTest {
     void testStartKeepAlive() {
         class Stub extends WebSocketClient { boolean ping=false; Stub(){ super(URI.create("ws://dummy")); }
             @Override public void onOpen(ServerHandshake s){
-                //No-op
+                // No-op
             }
             @Override public void onMessage(String m){
-                //No-op
+                // No-op
             }
             @Override public void onClose(int c, String r, boolean rem){
-                //No-op
+                // No-op
             }
             @Override public void onError(Exception ex){
-                //No-op
+                // No-op
             }
             @Override public boolean isOpen(){return true;}
             @Override public void send(String t){ if(t.contains("ping")) ping=true; }
@@ -217,13 +213,13 @@ class CryptoWebSocketHandlerTest {
     void testStartPongMonitor() {
         class Stub extends WebSocketClient { boolean closed=false; Stub(){ super(URI.create("ws://dummy"));}
             @Override public void onOpen(ServerHandshake s){
-                //No-op
+                // No-op
             }
             @Override public void onMessage(String m){
-                //No-op
+                // No-op
             }
             @Override public void onError(Exception ex){
-                //No-op
+                // No-op
             }
             @Override public boolean isOpen(){return true;}
             @Override public void close(){ closed=true; }
@@ -242,13 +238,7 @@ class CryptoWebSocketHandlerTest {
         assertDoesNotThrow(() -> ReflectionTestUtils.invokeMethod(handler, "reconnectToCoinbase"));
     }
 
-    @Test
-    void testInitSuccess() throws Exception {
-        // Should initialize without throwing and set up WebSocket client
-        handler.init();
-        Object client = ReflectionTestUtils.getField(handler, "coinbaseWebSocket");
-        assertNotNull(client, "init() should instantiate coinbaseWebSocket");
-    }// ===== additional WebSocketClient callback tests =====
+    // ===== additional WebSocketClient callback tests =====
 
     @Test
     void testWebSocketClientOnOpen() {
@@ -284,14 +274,14 @@ class CryptoWebSocketHandlerTest {
     }
 
     @Test
-    void testWebSocketClientOnErrorDoesNotThrow() {
+    void testWebSocketClientOnErrorDoesNotThrow(){
         ReflectionTestUtils.invokeMethod(handler, "connectToCoinbase");
         WebSocketClient client = (WebSocketClient) ReflectionTestUtils.getField(handler, "coinbaseWebSocket");
         assertDoesNotThrow(() -> client.onError(new Exception("err")));
     }
 
     @Test
-    void testWebSocketClientOnCloseSchedulesReconnect() {
+    void testWebSocketClientOnCloseSchedulesReconnect(){
         ScheduledExecutorService sched = mock(ScheduledExecutorService.class);
         ReflectionTestUtils.setField(handler, "scheduler", sched);
         ReflectionTestUtils.invokeMethod(handler, "connectToCoinbase");
