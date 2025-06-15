@@ -187,25 +187,12 @@ class CryptoWebSocketHandlerTest {
         track.setAccessible(true);
         Method rate = CryptoWebSocketHandler.class.getDeclaredMethod("rateLimitPassed", String.class);
         rate.setAccessible(true);
-        // First insert always true
         assertTrue((boolean) track.invoke(handler, "X", 1.0));
-        // First rate limit always true
         assertTrue((boolean) rate.invoke(handler, "X"));
-
-        // Simulate price state for trackPriceChange
-        @SuppressWarnings("unchecked")
-        Map<String, Double> lastPrices = (Map<String, Double>) ReflectionTestUtils.getField(handler, "lastPrices");
-        lastPrices.put("X", 100.0);
-        // Small move below threshold
+        ReflectionTestUtils.setField(handler, "lastPrices", Map.of("X", 100.0));
         assertFalse((boolean) track.invoke(handler, "X", 100.05));
-        // Big move above threshold
         assertTrue((boolean) track.invoke(handler, "X", 101.0));
-
-        // Simulate rate-limiting state
-        long now = System.currentTimeMillis();
-        Map<String, Long> mutableTimestamps = new ConcurrentHashMap<>();
-        mutableTimestamps.put("X", now);
-        ReflectionTestUtils.setField(handler, "lastUpdateTimestamps", mutableTimestamps);
+        ReflectionTestUtils.setField(handler, "lastUpdateTimestamps", Map.of("X", System.currentTimeMillis()));
         assertFalse((boolean) rate.invoke(handler, "X"));
     }
 

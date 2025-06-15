@@ -187,25 +187,12 @@ class CryptoWebSocketHandlerTest {
         track.setAccessible(true);
         Method rate = CryptoWebSocketHandler.class.getDeclaredMethod("rateLimitPassed", String.class);
         rate.setAccessible(true);
-        // First insert always true
         assertTrue((boolean) track.invoke(handler, "X", 1.0));
-        // First rate limit always true
         assertTrue((boolean) rate.invoke(handler, "X"));
-
-        // Simulate price state for trackPriceChange
-        @SuppressWarnings("unchecked")
-        Map<String, Double> lastPrices = (Map<String, Double>) ReflectionTestUtils.getField(handler, "lastPrices");
-        lastPrices.put("X", 100.0);
-        // Small move below threshold
+        ReflectionTestUtils.setField(handler, "lastPrices", Map.of("X", 100.0));
         assertFalse((boolean) track.invoke(handler, "X", 100.05));
-        // Big move above threshold
         assertTrue((boolean) track.invoke(handler, "X", 101.0));
-
-        // Simulate rate-limiting state
-        long now = System.currentTimeMillis();
-        Map<String, Long> mutableTimestamps = new ConcurrentHashMap<>();
-        mutableTimestamps.put("X", now);
-        ReflectionTestUtils.setField(handler, "lastUpdateTimestamps", mutableTimestamps);
+        ReflectionTestUtils.setField(handler, "lastUpdateTimestamps", Map.of("X", System.currentTimeMillis()));
         assertFalse((boolean) rate.invoke(handler, "X"));
     }
 
@@ -264,17 +251,10 @@ void testStartPongMonitor() {
     class StubClient extends WebSocketClient {
         boolean closed = false;
         StubClient() { super(URI.create("ws://dummy")); }
-        @Override public void onOpen(ServerHandshake s){
-            // No-op
-        }
-        @Override public void onMessage(String m){
-            //No-op
-        }
-        @Override public void onError(Exception ex){
-             //No-op
-        }
-        @Override public boolean isOpen(){return true;}
-        
+        @Override public void onOpen(ServerHandshake s){}
+        @Override public void onMessage(String m){}
+        @Override public void onError(Exception ex){}
+        @Override public boolean isOpen() { return true; }
 
         // Override close() so we can catch it
         @Override

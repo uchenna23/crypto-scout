@@ -1,8 +1,6 @@
 package com.example.crypto_scout;
 
 import com.example.crypto_scout.Service.CryptoWebSocketHandler;
-import com.example.crypto_scout.Service.CryptoWebSocketHandler.CryptoWebSocketInitException;
-
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,7 +17,6 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class CryptoWebSocketHandlerTest {
@@ -116,11 +113,9 @@ class CryptoWebSocketHandlerTest {
 
     @Test
     void testInitThrowsException() {
-        // Force a null URI so new URI(null) blows up inside init()
-        ReflectionTestUtils.setField(handler, "coinbaseWebSocketUri", null);
-
-        // Call init() directly, not via invokeMethod
-        assertThrows(CryptoWebSocketInitException.class, () -> handler.init());
+        // Simulate an exception by setting an invalid URI
+        ReflectionTestUtils.setField(handler, "coinbaseWebSocketUri", "invalid_uri");
+        assertThrows(Exception.class, () -> ReflectionTestUtils.invokeMethod(handler, "init"));
     }
 
     @Test
@@ -187,25 +182,12 @@ class CryptoWebSocketHandlerTest {
         track.setAccessible(true);
         Method rate = CryptoWebSocketHandler.class.getDeclaredMethod("rateLimitPassed", String.class);
         rate.setAccessible(true);
-        // First insert always true
         assertTrue((boolean) track.invoke(handler, "X", 1.0));
-        // First rate limit always true
         assertTrue((boolean) rate.invoke(handler, "X"));
-
-        // Simulate price state for trackPriceChange
-        @SuppressWarnings("unchecked")
-        Map<String, Double> lastPrices = (Map<String, Double>) ReflectionTestUtils.getField(handler, "lastPrices");
-        lastPrices.put("X", 100.0);
-        // Small move below threshold
+        ReflectionTestUtils.setField(handler, "lastPrices", Map.of("X", 100.0));
         assertFalse((boolean) track.invoke(handler, "X", 100.05));
-        // Big move above threshold
         assertTrue((boolean) track.invoke(handler, "X", 101.0));
-
-        // Simulate rate-limiting state
-        long now = System.currentTimeMillis();
-        Map<String, Long> mutableTimestamps = new ConcurrentHashMap<>();
-        mutableTimestamps.put("X", now);
-        ReflectionTestUtils.setField(handler, "lastUpdateTimestamps", mutableTimestamps);
+        ReflectionTestUtils.setField(handler, "lastUpdateTimestamps", Map.of("X", System.currentTimeMillis()));
         assertFalse((boolean) rate.invoke(handler, "X"));
     }
 
@@ -219,20 +201,19 @@ class CryptoWebSocketHandlerTest {
 
     @Test
     void testStartBatchProcessor() {
-        // prime buffer with valid JSON entries
+        // prime buffer
         @SuppressWarnings("unchecked")
         ConcurrentLinkedQueue<String> buf = (ConcurrentLinkedQueue<String>) ReflectionTestUtils.getField(handler, "messageBuffer");
         buf.clear();
-        buf.add("{\"A\":1.0}");
-        buf.add("{\"B\":2.0}");
+        buf.add("{A:1.0}");
+        buf.add("{B:2.0}");
         ReflectionTestUtils.invokeMethod(handler, "startBatchProcessor");
         ArgumentCaptor<String> cap = ArgumentCaptor.forClass(String.class);
-        verify(messagingTemplate, times(1)).convertAndSend(eq("/topic/crypto"), cap.capture());
+        verify(messagingTemplate).convertAndSend(eq("/topic/crypto"), cap.capture());
         String sent = cap.getValue();
         assertTrue(sent.contains("\"A\":1.0"));
         assertTrue(sent.contains("\"B\":2.0"));
     }
-
 
     @Test
     void testStartKeepAlive() {
@@ -260,45 +241,28 @@ class CryptoWebSocketHandlerTest {
     }
 
     @Test
-void testStartPongMonitor() {
-    class StubClient extends WebSocketClient {
-        boolean closed = false;
-        StubClient() { super(URI.create("ws://dummy")); }
-        @Override public void onOpen(ServerHandshake s){
-            // No-op
+    void testStartPongMonitor() {
+        class StubClient extends WebSocketClient {
+            boolean closed=false, open=true; StubClient(){ super(URI.create("ws://dummy")); }
+            @Override public void onOpen(ServerHandshake s){
+                 //No-op
+            }
+            @Override public void onMessage(String m){
+                 //No-op
+            }
+            @Override public void onClose(int c, String r, boolean rem){ closed=true; }
+            @Override public void onError(Exception ex){
+                 //No-op
+            }
+            @Override public boolean isOpen(){return open;}
         }
-        @Override public void onMessage(String m){
-            //No-op
-        }
-        @Override public void onError(Exception ex){
-             //No-op
-        }
-        @Override public boolean isOpen(){return true;}
-        
-
-        // Override close() so we can catch it
-        @Override
-        public void close() {
-            closed = true;
-        }
-
-        // onClose can also set closed but isn't actually invoked by close()
-        @Override
-        public void onClose(int code, String reason, boolean remote){
-            closed = true;
-        }
+        StubClient stub = new StubClient();
+        ReflectionTestUtils.setField(handler, "coinbaseWebSocket", stub);
+        ReflectionTestUtils.setField(handler, "lastPongTime", System.currentTimeMillis()-120000);
+        ReflectionTestUtils.setField(handler, "connectionLostTimeoutSeconds", 1);
+        ReflectionTestUtils.invokeMethod(handler, "startPongMonitor");
+        assertTrue(stub.closed);
     }
-    StubClient stub = new StubClient();
-    ReflectionTestUtils.setField(handler, "coinbaseWebSocket", stub);
-    ReflectionTestUtils.setField(handler, "lastPongTime", System.currentTimeMillis() - 120_000);
-    ReflectionTestUtils.setField(handler, "connectionLostTimeoutSeconds", 1);
-
-    // run the monitor
-    ReflectionTestUtils.invokeMethod(handler, "startPongMonitor");
-
-    assertTrue(stub.closed, "Expected close() to be called on timeout");
-}
-
 
     @Test
     void testReconnectDoesNotThrow() {
