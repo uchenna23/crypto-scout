@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-@SuppressWarnings("rawtypes")
 class OpenAIServiceTest {
 
     private OpenAIService service;
