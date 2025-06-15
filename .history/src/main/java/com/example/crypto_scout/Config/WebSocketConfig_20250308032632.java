@@ -19,7 +19,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns("http://localhost:4200","\"http://localhost:8080\", \"https://crypto-scout-app.azurewebsites.net\"")
+                .setAllowedOriginPatterns("8") // allow all origins for testing
                 .withSockJS();
     }
 }

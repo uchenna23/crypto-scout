@@ -42,7 +42,7 @@ public class CryptoPriceService {
             return Map.of(ERROR_MESSAGE, "Invalid currency pair");
         }
 
-        String coinbaseUrl = COINBASE_API_URL.formatted(currencyPair);
+        String coinbaseUrl = String.format(COINBASE_API_URL, currencyPair);
 
         try {
             Map<String, Object> coinbaseResponse = restTemplate.getForObject(coinbaseUrl, Map.class);
@@ -55,7 +55,7 @@ public class CryptoPriceService {
 
             // Get historical data from CoinGecko
             String cryptoId = getCoinGeckoId((String) data.get("base"));
-            String coingeckoUrl = COINGECKO_API_URL.formatted(cryptoId, data.get("currency"), 7);
+            String coingeckoUrl = String.format(COINGECKO_API_URL, cryptoId, data.get("currency"), 7);
             Map<String, Object> coingeckoResponse = restTemplate.getForObject(coingeckoUrl, Map.class);
 
             Map<String, Object> result = new HashMap<>();

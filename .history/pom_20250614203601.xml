@@ -7,7 +7,7 @@
   <parent>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-parent</artifactId>
-      <version>3.5.0</version>
+      <version>3.4.8</version>
       <relativePath/>
     </parent>
 
@@ -16,6 +16,21 @@
   <version>0.0.1-SNAPSHOT</version>
   <name>Crypto Scout</name>
   <description>Crypto Scout Application</description>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.apache.httpcomponents.client5</groupId>
+        <artifactId>httpclient5</artifactId>
+        <version>5.2.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents.core5</groupId>
+        <artifactId>httpcore5</artifactId>
+        <version>5.2.1</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <!-- Spring Boot Starters -->
@@ -99,6 +114,7 @@
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-resolver-dns-native-macos</artifactId>
+      <version>4.1.100.Final</version>
       <classifier>osx-aarch_64</classifier>
     </dependency>
 
@@ -106,11 +122,12 @@
     <dependency>
       <groupId>org.hibernate.validator</groupId>
       <artifactId>hibernate-validator</artifactId>
+      <version>8.0.1.Final</version>
     </dependency>
     <dependency>
       <groupId>jakarta.validation</groupId>
       <artifactId>jakarta.validation-api</artifactId>
-      <version>3.1.1</version>
+      <version>3.0.2</version>
     </dependency>
 
     <!-- Java WebSocket Dependency -->
@@ -139,40 +156,22 @@
   <plugins>
     <!-- Spring Boot Maven Plugin -->
     <plugin>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-maven-plugin</artifactId>
-      <version>3.5.0</version>
-      <executions>
-        <execution>
-          <goals>
-            <goal>repackage</goal>
-          </goals>
-        </execution>
-      </executions>
-    </plugin>
-    <plugin>
-      <groupId>org.jacoco</groupId>
-      <artifactId>jacoco-maven-plugin</artifactId>
-      <version>0.8.11</version>
-      <executions>
-        <execution>
-          <goals>
-            <goal>prepare-agent</goal>
-          </goals>
-        </execution>
-        <execution>
-          <id>report</id>
-          <phase>test</phase>
-          <goals>
-            <goal>report</goal>
-          </goals>
-        </execution>
-      </executions>
-    </plugin>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+          <version>3.4.6</version>
+          <executions>
+            <execution>
+              <goals>
+                <goal>repackage</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
 
     <plugin>
       <groupId>org.apache.maven.plugins</groupId>
       <artifactId>maven-surefire-plugin</artifactId>
+      <version>3.5.2</version>
     </plugin>
   </plugins>
 </build>
