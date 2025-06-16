@@ -56,19 +56,24 @@ public class OpenAIController {
         return ResponseEntity.ok(analysisResult);
     }
     
+    private static final String BITCOIN = "bitcoin";
+    private static final String ETHEREUM = "ethereum";
+    private static final String DOGECOIN = "dogecoin";
+    private static final String LITECOIN = "litecoin";
+
     /**
      * Helper method to extract a coin id from the query using known coin aliases.
      */
     private String extractCoinId(String query) {
         Map<String, String> coinAliases = Map.of(
-                "btc", "bitcoin",
-                "bitcoin", "bitcoin",
-                "eth", "ethereum",
-                "ethereum", "ethereum",
-                "doge", "dogecoin",
-                "dogecoin", "dogecoin",
-                "ltc", "litecoin",
-                "litecoin", "litecoin"
+                "btc", BITCOIN,
+                BITCOIN, BITCOIN,
+                "eth", ETHEREUM,
+                ETHEREUM, ETHEREUM,
+                "doge", DOGECOIN,
+                DOGECOIN, DOGECOIN,
+                "ltc", LITECOIN,
+                LITECOIN, LITECOIN
                 // Add more coin aliases as needed
         );
         for (Map.Entry<String, String> entry : coinAliases.entrySet()) {

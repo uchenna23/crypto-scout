@@ -10,6 +10,7 @@ import java.util.*;
 @RequestMapping("/api/crypto")
 public class CryptoPriceController {
 
+    private static final String ERROR = "error";
     private final CryptoPriceService cryptoPriceService;
 
     public CryptoPriceController(CryptoPriceService cryptoPriceService) {
@@ -21,7 +22,7 @@ public class CryptoPriceController {
     public ResponseEntity<Map<String, Object>> getCryptoPrice(@PathVariable String currencyPair) {
         Map<String, Object> response = cryptoPriceService.getCryptoPrice(currencyPair);
 
-        if (response.containsKey("error")) {
+        if (response.containsKey(ERROR)) {
             return ResponseEntity.badRequest().body(response); //  Return 400 for errors
         }
 
@@ -34,13 +35,13 @@ public class CryptoPriceController {
         // Validate currency pair format
         for (String pair : currencyPairs) {
             if (!pair.matches("^[A-Za-z0-9-]+$")) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Invalid currency pair: " + pair));
+                return ResponseEntity.badRequest().body(Map.of(ERROR, "Invalid currency pair: " + pair));
             }
         }
         Map<String, Object> response = cryptoPriceService.getMultipleCryptoPrices(currencyPairs);
 
         if (response.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "No valid data returned"));
+            return ResponseEntity.badRequest().body(Map.of(ERROR, "No valid data returned"));
         }
 
         return ResponseEntity.ok(response);
